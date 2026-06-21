@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade Log v2</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- タブメニュー -->
+    <div class="tabs">
+        <button id="btn-tab-record" class="tab-btn active" onclick="switchTab('record')">記録</button>
+        <button id="btn-tab-list" class="tab-btn" onclick="switchTab('list')">一覧</button>
+        <button id="btn-tab-stats" class="tab-btn" onclick="switchTab('stats')">統計</button>
+    </div>
+
+    <!-- 1. 記録タブ -->
+    <div id="tab-record" class="container active">
+        <h1 id="formTitle">📊 新規トレード記録</h1>
+        <input type="hidden" id="editingId" value="">
+        
+        <!-- Open 日時 -->
+        <h3 class="section-title open-theme">Open 日時</h3>
+        <div class="flex-row">
+            <div class="form-group">
+                <label>Open Date</label>
+                <input type="date" id="tradeDate" onchange="updateDstDefault(); autoCalculateAllMetrics();">
+            </div>
+            <div class="form-group">
+                <label>Open Time (JST)</label>
+                <input type="text" id="tradeTime" placeholder="時間または下の変換を使用" oninput="autoCalculateAllMetrics()">
+            </div>
+        </div>
+
+        <!-- Close 日時 -->
+        <h3 class="section-title close-theme">Close 日時</h3>
+        <div class="flex-row">
+            <div class="form-group">
+                <label>Close Date</label>
+                <input type="date" id="closeDate" onchange="autoCalculateAllMetrics()">
+            </div>
+            <div class="form-group">
+                <label>Close Time (JST)</label>
+                <input type="text" id="closeTime" placeholder="例: 01:15" oninput="autoCalculateAllMetrics()">
+            </div>
+        </div>
+
+        <div id="liveHoldingBox" class="live-status-text">保有時間: --</div>
+
+        <!-- 海外時間変換ボックス -->
+        <div class="form-group convert-box">
+            <label class="convert-label">⏰ 海外時間(時差-6時間)を変換</label>
+            <div class="flex-row" style="margin-bottom: 6px;">
+                <div style="flex:1;">
+                    <span style="font-size:11px; color:var(--text-muted);">変換先対象</span>
+                    <select id="timeConvertTarget">
+                        <option value="open">Open時間へ反映</option>
+                        <option value="close">Close時間へ反映</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-row">
+                <input type="text" id="foreignTimeInput" placeholder="例: 7:41" autocomplete="off">
+                <button type="button" class="action-btn" onclick="runTimeConverter()" style="margin:0; width:auto; padding:0 15px;">変換実行</button>
+            </div>
+            <label class="switch-label">
+                <input type="checkbox" id="isSummerTime">夏時間
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>市場</label>
+            <div class="btn-group" id="marketGroup">
+                <button type="button" class="select-btn" data-type="market" data-val="アジア">アジア</button>
+                <button type="button" class="select-btn" data-type="market" data-val="ロンドン">ロンドン</button>
+                <button type="button" class="select-btn" data-type="market" data-val="ニューヨーク">ニューヨーク</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>通貨ペア / 銘柄</label>
+            <div class="btn-group" id="pairGroup">
+                <button type="button" class="select-btn" data-type="pair" data-val="XAUUSD">XAUUSD</button>
+                <button type="button" class="select-btn" data-type="pair" data-val="BTCUSD">BTCUSD</button>
+                <button type="button" class="select-btn" data-type="pair" data-val="OIL">OIL</button>
+                <button type="button" class="select-btn" data-type="pair" data-val="USDJPY">USDJPY</button>
+                <button type="button" class="select-btn" data-type="pair" data-val="EURUSD">EURUSD</button>
+                <button type="button" class="select-btn" data-type="pair" data-val="AUDJPY">AUDJPY</button>
+                <button type="button" class="select-btn" data-type="pair" data-val="AUDUSD">AUDUSD</button>
+                <button type="button" class="select-btn" data-type="pair" data-val="EURJPY">EURJPY</button>
+                <button type="button" class="select-btn" data-type="pair" data-val="その他">その他</button>
+            </div>
+            <input type="text" id="customPairInput" placeholder="通貨ペアを手入力してください">
+        </div>
+
+        <div class="flex-row">
+            <div class="form-group">
+                <label>月足</label>
+                <div class="btn-group" id="monthlyGroup">
+                    <button type="button" class="select-btn" data-type="monthly" data-val="陽線">陽線</button>
+                    <button type="button" class="select-btn" data-type="monthly" data-val="陰線">陰線</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>週足</label>
+                <div class="btn-group" id="weeklyGroup">
+                    <button type="button" class="select-btn" data-type="weekly" data-val="陽線">陽線</button>
+                    <button type="button" class="select-btn" data-type="weekly" data-val="陰線">陰線</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>日足</label>
+                <div class="btn-group" id="dailyGroup">
+                    <button type="button" class="select-btn" data-type="daily" data-val="陽線">陽線</button>
+                    <button type="button" class="select-btn" data-type="daily" data-val="陰線">陰線</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>目線</label>
+            <div class="btn-group" id="biasGroup">
+                <button type="button" class="select-btn" data-type="bias" data-val="ロング">ロング</button>
+                <button type="button" class="select-btn" data-type="bias" data-val="ショート">ショート</button>
+                <button type="button" class="select-btn" data-type="bias" data-val="レンジ">レンジ</button>
+            </div>
+        </div>
+
+        <div class="flex-row">
+            <div class="form-group">
+                <label>売買</label>
+                <div class="btn-group" id="sideGroup">
+                    <button type="button" class="select-btn" data-type="side" data-val="Long">ロング</button>
+                    <button type="button" class="select-btn" data-type="side" data-val="Short">ショート</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>結果</label>
+                <div class="btn-group" id="resultGroup">
+                    <button type="button" class="select-btn" data-type="result" data-val="勝ち">勝ち</button>
+                    <button type="button" class="select-btn" data-type="result" data-val="負け">負け</button>
+                    <button type="button" class="select-btn" data-type="result" data-val="建値">建値</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-row">
+            <div class="form-group">
+                <label>Open 価格</label>
+                <input type="number" id="openPriceInput" step="any" placeholder="例: 3000.00" oninput="autoCalculateAllMetrics()">
+            </div>
+            <div class="form-group">
+                <label>Close 価格</label>
+                <input type="number" id="closePriceInput" step="any" placeholder="例: 3010.50" oninput="autoCalculateAllMetrics()">
+            </div>
+        </div>
+        <div class="flex-row">
+            <div class="form-group">
+                <label>TP 価格</label>
+                <input type="number" id="tpPriceInput" step="any" placeholder="例: 3050.00" oninput="autoCalculateAllMetrics()">
+            </div>
+            <div class="form-group">
+                <label>SL 価格</label>
+                <input type="number" id="slPriceInput" step="any" placeholder="例: 2980.00" oninput="autoCalculateAllMetrics()">
+            </div>
+        </div>
+
+        <div class="rr-indicator" id="liveRrBox">
+            <span>想定 RR 1 : --</span>
+            <span>実際 RR 1 : --</span>
+        </div>
+
+        <div class="flex-row">
+            <div class="form-group">
+                <label>ロット数</label>
+                <input type="number" id="lotInput" step="any" placeholder="0.1" oninput="autoCalculateAllMetrics()">
+            </div>
+            <div class="form-group">
+                <label>獲得PIPS</label>
+                <input type="number" id="pipsInput" step="any" placeholder="自動計算されます" oninput="autoCalculateAllMetrics()">
+            </div>
+            <div class="form-group">
+                <label>損益額 (USD) (自動計算)</label>
+                <input type="number" id="pnlInput" step="any" placeholder="自動計算されます">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>感情</label>
+            <div class="btn-group" id="emotionGroup">
+                <button type="button" class="select-btn" data-type="emotion" data-val="冷静">冷静</button>
+                <button type="button" class="select-btn" data-type="emotion" data-val="焦り">焦り</button>
+                <button type="button" class="select-btn" data-type="emotion" data-val="不安">不安</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>メモ（根拠や反省点）</label>
+            <textarea id="memoInput" placeholder="エントリーした環境認識や、トレード後の反省etc"></textarea>
+        </div>
+
+        <button type="button" class="action-btn" id="submitBtn" onclick="saveTradeLog()">このトレードを保存する</button>
+    </div>
+
+    <!-- 2. 一覧タブ -->
+    <div id="tab-list" class="container">
+        <div class="list-header">
+            <div class="count-text" id="totalCountText">0 件の記録</div>
+            <button class="nav-trigger-btn" onclick="clearFormAndGoToRecord()">＋ 新規記録</button>
+        </div>
+
+        <div id="cardContainer"></div>
+
+        <div class="backup-section">
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">データのバックアップ / 出力選択</p>
+            <button class="backup-btn" onclick="exportToCSV()">Excel用にCSVでダウンロード</button>
+            <button class="backup-btn" onclick="exportToText()">引っ越し用にテキストをコピー</button>
+            <button class="backup-btn" onclick="importFromText()" style="background-color:#2c3e50;">データをテキストから復元</button>
+            <br>
+            <button onclick="clearAllData()" style="background:none; border:none; color:var(--color-lose); font-size:12px; margin-top:15px; cursor:pointer;">全てのデータを初期化する</button>
+        </div>
+    </div>
+
+    <!-- 3. 統計タブ -->
+    <div id="tab-stats" class="container">
+        <h1>📈 トレード統計分析</h1>
+        
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div style="font-size:13px; color:var(--text-muted);">総トレード数</div>
+                <div class="stat-val" id="statTotalTrades">0</div>
+            </div>
+            <div class="stat-card">
+                <div style="font-size:13px; color:var(--text-muted);">総合勝率</div>
+                <div class="stat-val" id="statWinRate" style="color:var(--color-win)">0%</div>
+                <div style="font-size:11px; color:var(--text-muted);" id="statWLD">0勝 0敗 0分</div>
+            </div>
+            <div class="stat-card">
+                <div style="font-size:13px; color:var(--text-muted);">総損益額</div>
+                <div class="stat-val" id="statTotalPnl">0 USD</div>
+            </div>
+            <div class="stat-card">
+                <div style="font-size:13px; color:var(--text-muted);">総獲得PIPS</div>
+                <div class="stat-val" id="statTotalPips">0 pips</div>
+            </div>
+        </div>
+
+        <h2>😊 感情トレード率</h2>
+        <div class="stat-list" id="emotionStatList"></div>
+
+        <h2>💱 通貨ペア別成績 & 平均保有時間</h2>
+        <div class="stat-list" id="pairStatList"></div>
+
+        <h2>⏰ オープン時間統計 (24時間別分布)</h2>
+        <div class="stat-list" id="openTimeStatList" style="padding: 15px; font-family: monospace;"></div>
+
+        <h2>⏳ クローズ時間統計 (24時間別分布)</h2>
+        <div class="stat-list" id="closeTimeStatList" style="padding: 15px; font-family: monospace;"></div>
+    </div>
+
+    <!-- 外部スクリプト読み込み -->
+    <script src="js/ui.js"></script>
+    <script src="js/record.js"></script>
+    <script src="js/list.js"></script>
+    <script src="js/stats.js"></script>
+</body>
+</html>
