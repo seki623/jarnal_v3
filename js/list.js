@@ -35,7 +35,7 @@ function refreshApp() {
             card.innerHTML = `
                 <div class="card-row1">
                     <span>📊 ${t.market || "-"}市場</span>
-                    <span>😊 : ${t.emotion || "-"}</span>
+                    <span>💟 : ${t.emotion || "-"}</span>
                 </div>
                 <div class="card-row2">
                     ${t.side && t.side !== "-" ? `<span class="badge ${t.side}">${t.side === 'Long' ? 'ロング' : 'ショート'}</span>` : ''}

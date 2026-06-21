@@ -1,4 +1,3 @@
-// 24時間データ集計・通貨別平均保有時間・テキストグラフ出力関連ロジック
 function calculateStatistics(trades) {
     const total = trades.length;
     document.getElementById('statTotalTrades').innerText = total;
@@ -7,7 +6,9 @@ function calculateStatistics(trades) {
         document.getElementById('statWinRate').innerText = "0%";
         document.getElementById('statWLD').innerText = "0勝 0敗 0分";
         document.getElementById('statTotalPnl').innerText = "0 USD";
+        document.getElementById('statTotalPnl').style.color = 'var(--text-color)';
         document.getElementById('statTotalPips').innerText = "0 pips";
+        document.getElementById('statTotalPips').style.color = 'var(--text-color)';
         document.getElementById('emotionStatList').innerHTML = "データがありません";
         document.getElementById('pairStatList').innerHTML = "データがありません";
         document.getElementById('openTimeStatList').innerHTML = "データがありません";
@@ -98,28 +99,52 @@ function calculateStatistics(trades) {
         pairContainer.appendChild(item);
     }
 
-    renderTextChart(document.getElementById('openTimeStatList'), openHourlyCounts);
-    renderTextChart(document.getElementById('closeTimeStatList'), closeHourlyCounts);
+    renderVerticalChart(document.getElementById('openTimeStatList'), openHourlyCounts);
+    renderVerticalChart(document.getElementById('closeTimeStatList'), closeHourlyCounts);
 }
 
-function renderTextChart(containerElement, hourlyArray) {
+function renderVerticalChart(containerElement, hourlyArray) {
     containerElement.innerHTML = "";
+    
+    const maxCount = Math.max(...hourlyArray);
+
+    const chartTable = document.createElement('div');
+    chartTable.className = 'vertical-chart';
+
+    const labelRow = document.createElement('div');
+    labelRow.className = 'axis-label-row';
+
     for (let h = 0; h < 24; h++) {
         const count = hourlyArray[h];
-        const label = String(h).padStart(2, '0') + "時";
         
-        let barStr = "";
-        if(count > 0) {
-            barStr = "█".repeat(count);
-        }
+        // 最大値に対する正確な相対比％を割り出します（数字ラベルの枠を考慮し、最大高さを最大値の80%にセーブ）
+        const heightPct = (maxCount > 0 && count > 0) ? (count / maxCount) * 80 : 0;
 
-        const row = document.createElement('div');
-        row.className = 'chart-row';
-        row.innerHTML = `
-            <span class="chart-label">${label}</span>
-            <span class="chart-bar">${barStr}</span>
-            <span class="chart-count">${count}回</span>
+        const col = document.createElement('div');
+        col.className = 'vertical-col';
+        
+        // 0回の時は数字も完全に消し、グラフの高さも完全に0px（フラット）にします
+        const numDisplay = count > 0 ? `${count}` : '&nbsp;';
+        const barHeightStyle = count > 0 ? `${heightPct}%` : '0px';
+
+        col.innerHTML = `
+            <div class="bar-wrap">
+                <span class="bar-count-label">${numDisplay}</span>
+                <div class="bar-body" style="height: ${barHeightStyle};"></div>
+            </div>
         `;
-        containerElement.appendChild(row);
+        chartTable.appendChild(col);
+
+        const lblCol = document.createElement('div');
+        lblCol.className = 'axis-label';
+        if (h % 2 === 0) {
+            lblCol.innerText = `${h}時`;
+        } else {
+            lblCol.innerHTML = '&nbsp;';
+        }
+        labelRow.appendChild(lblCol);
     }
+
+    containerElement.appendChild(chartTable);
+    containerElement.appendChild(labelRow);
 }

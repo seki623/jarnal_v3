@@ -336,13 +336,61 @@ select { cursor: pointer; }
     border-bottom: 1px solid #2d2d2d;
     color: var(--text-color);
 }
-.chart-row {
+
+/* 📊 完全にフラットなタイムラインから直角に立ち上がるモダンなグラフレイアウト */
+.vertical-chart {
     display: flex;
-    font-family: monospace;
-    font-size: 13px;
-    padding: 3px 0;
-    align-items: center;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    height: 140px; 
+    margin-top: 25px;
+    padding: 0;
+    box-sizing: border-box;
+    border-bottom: 2px solid var(--border-color); /* これが基準の0時間軸ラインになります */
 }
-.chart-label { width: 50px; color: var(--text-muted); }
-.chart-bar { color: #3182ce; margin-right: 8px; word-break: break-all; }
-.chart-count { color: var(--text-muted); font-size: 11px; }
+.vertical-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    position: relative;
+}
+.bar-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+.bar-count-label {
+    font-size: 10px;
+    color: var(--text-color);
+    font-family: monospace;
+    margin-bottom: 4px;
+    text-align: center;
+    line-height: 1;
+}
+.bar-body {
+    width: 65%; /* 棒のスタイリッシュな太さ */
+    background-color: var(--color-yang); /* 美しい単色のグリーン */
+    transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 0 !important; /* 角丸を完全に抹消し、シャープな直角へ */
+}
+.axis-label-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 6px;
+    margin-bottom: 15px;
+}
+.axis-label {
+    flex: 1;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: monospace;
+}
